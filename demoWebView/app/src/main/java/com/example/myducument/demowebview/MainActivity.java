@@ -16,7 +16,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity {
     private Button buttonGoBack;
     private Button buttonGo;
     private Button buttonReLoad;
@@ -34,11 +34,54 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
 
-        webView.setWebViewClient(new WebViewClient());
-        progressBar.setVisibility(View.GONE);
-        buttonGo.setOnClickListener(this);
-        buttonGoBack.setOnClickListener(this);
-        buttonReLoad.setOnClickListener(this);
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                super.onPageStarted(view, url, favicon);
+                progressBar.setVisibility(View.VISIBLE);
+                textLoading.setVisibility(View.VISIBLE);
+                textLoading.setText("Loading...");
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                progressBar.setVisibility(View.GONE);
+                textLoading.setVisibility(View.GONE);
+
+            }
+
+        });
+        webView.loadUrl("http://oicsoft.com");
+        buttonGoBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (webView.canGoBack()) {
+                    webView.goBack();
+                    editURL.setText(webView.getUrl());
+                } else {
+                    Toast.makeText(MainActivity.this, "Khong quay lai duoc !!", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        buttonReLoad.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                webView.reload();
+            }
+        });
+        buttonGo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                String url = editURL.getText().toString();
+                url=url.replaceAll("http://", "");
+                webView.loadUrl("http://"+url);
+                editURL.setText(webView.getUrl());
+
+            }
+        });
+
 
 
     }
@@ -53,53 +96,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         textLoading = findViewById(R.id.text_loading);
     }
 
-    @Override
-    public void onClick(View v) {
-        AppWebViewClients appWebViewClients = new AppWebViewClients(progressBar);
-        if (v.getId() == R.id.button_go) {
-            if (editURL.getText().toString() != "") {
-                String url = editURL.getText().toString();
-                url.replaceAll("http://", "");
-
-                appWebViewClients.shouldOverrideUrlLoading(webView,"http://"+url);
-                editURL.setText(webView.getUrl());
-                //appWebViewClients.onPageFinished(webView,"http://"+url);
-
-
-            }
-            if (v.getId() == R.id.button_goback) {
-                if (webView.canGoBack()) {
-                    webView.goBack();
-                    editURL.setText(webView.getUrl());
-                } else {
-                    Toast.makeText(MainActivity.this, "Khong quay lai duoc !!", Toast.LENGTH_SHORT).show();
-                }
-            }
-            if (v.getId() == R.id.button_reload) {
-                webView.reload();
-            }
-
-        }
-    }
-
-    class AppWebViewClients extends WebViewClient {
-        private  ProgressBar progressBar;
-        public AppWebViewClients(ProgressBar progressBar) {
-            this.progressBar = progressBar;
-            progressBar.setVisibility(View.VISIBLE);
-        }
-
-        @Override
-        public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            view.loadUrl(url);
-            return true;
-        }
-
-        @Override
-        public void onPageFinished(WebView view, String url) {
-            super.onPageFinished(view, url);
-            progressBar.setVisibility(View.GONE);
-        }
-    }
 }
 
